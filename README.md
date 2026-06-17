@@ -1,6 +1,6 @@
 # QRSCANNER
 
-QRSCANNER is a Django application for managing gas cylinder QR workflows. It supports user login, cylinder stock dashboards, vendor/type masters, inward and outward scanning, stock-in/stock-out actions, and inward/outward history views.
+QRSCANNER is the Gas Cylinder Scanner, a Django application for managing gas cylinder QR workflows. It supports user login, cylinder stock dashboards, vendor/type masters, inward and outward scanning, stock-in/stock-out actions, and inward/outward history views.
 
 ## Features
 
@@ -10,6 +10,7 @@ QRSCANNER is a Django application for managing gas cylinder QR workflows. It sup
 - Cylinder inward form, QR validation, submission, and removal.
 - Cylinder outward form, QR validation, submission, and stock-out handling.
 - Inward/outward history filtering by vendor and date fields.
+- Seeded gas cylinder type master data through Django migrations.
 - PostgreSQL database configuration through environment variables.
 
 ## Tech Stack
@@ -84,6 +85,8 @@ Apply database migrations:
 python manage.py migrate
 ```
 
+Migrations also seed the standard `Cylinder_Type_Master` records used by the Gas Cylinder Scanner workflow.
+
 Run the development server:
 
 ```bash
@@ -124,6 +127,10 @@ Run the Django test suite from the project directory:
 python manage.py test
 ```
 
+## Workflow
+
+See `WORKFLOW.md` for the development, seed-data, test, and release workflow.
+
 ## GitHub Push Checklist
 
 Before pushing:
@@ -139,4 +146,3 @@ git push -u origin main
 ```
 
 Review `git status` carefully before committing so local secrets and database files are not staged.
-

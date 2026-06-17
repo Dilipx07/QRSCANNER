@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Explicitly defined the project as the Gas Cylinder Scanner in app metadata, admin metadata, model names, and docs.
+- Added migration-managed seed data for `Cylinder_Type_Master`.
+- Added a seed-data regression test and workflow documentation.
 - Added GitHub-ready project documentation.
 - Added environment variable example file.
 - Added ignore rules for local secrets, databases, virtual environments, and generated Python files.
-

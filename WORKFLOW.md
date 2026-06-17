@@ -1,0 +1,55 @@
+# Workflow
+
+This document describes the development and release workflow for the Gas Cylinder Scanner Django project.
+
+## Development Flow
+
+1. Create or update code in a focused branch.
+2. Keep local secrets in `.env`; use `.env.example` for shared configuration names.
+3. Add Django migrations for model or seed-data changes.
+4. Run tests before committing.
+5. Commit with a short developer-readable summary and a concise body when useful.
+6. Push to `origin/main` or open a pull request.
+
+## Seed Data Flow
+
+`Cylinder_Type_Master` seed data is managed through Django migrations. Running migrations inserts the standard gas cylinder types:
+
+1. Oxygen
+2. Nitrogen
+3. Carbon Dioxide
+4. Argon
+5. Hydrogen
+6. Helium
+7. LPG
+8. Acetylene
+
+Apply seed data with:
+
+```bash
+python manage.py migrate
+```
+
+## Test Flow
+
+Run the test suite from the repository root:
+
+```bash
+python manage.py test
+```
+
+For this project, tests should verify both workflow behavior and required master data such as cylinder type seeds.
+
+## Release Flow
+
+Before pushing:
+
+```bash
+git status
+python manage.py test
+git add .
+git commit
+git push
+```
+
+Confirm that `.env`, local databases, virtual environments, and generated Python cache files are not staged.
