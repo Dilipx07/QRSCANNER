@@ -31,63 +31,53 @@
   <!-- Template Main CSS File -->
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
 </head>
-<style>
-  #logo{
-    width: 200px !important;
-    height: auto !important;
-  }
-</style>
 
-<body style="background: no-repeat; background-image: url({% static 'img/cylinder-master-login-bg.png' %});">
-  <main>
-    <div class="container">
-      <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center m-auto">
-        <div class="d-flex justify-content-center py-4">
-          <div class="text-center">
-            <img src="{% static 'img/cylinder-master-login-logo.png' %}" alt="Cylinder Master logo" id="logo">
-          </div>
+<body class="login-page" style="--login-bg-image: url({% static 'img/cylinder-master-login-bg.png' %});">
+  <main class="login-main">
+    <section class="login-shell">
+      <div class="login-brand-panel">
+        <div class="login-logo-frame">
+          <img src="{% static 'img/cylinder-master-login-logo.png' %}" alt="Cylinder Master logo" class="login-logo">
         </div>
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
-              <!-- End Logo -->
-              <div class="card mb-3">
-                <div class="card-body"><br>
-                  <form action="{% url 'Login-Auth' %}" method="post" class="row g-3 needs-validation" novalidate>
-                    {% csrf_token %}
-                    <div class="col-12">
-                      <label for="username" class="form-label">Username</label>
-                      <div class="input-group has-validation">
-                        <span class="input-group-text" id="inputGroupPrepend"><i class="fa fa-user"></i></span>
-                        <input type="text" name="username" class="form-control" id="username" required>
-                        <div class="invalid-feedback">Please enter your Username.</div>
-                      </div>
-                    </div>
-                    <div class="col-12">
-                      <label for="password" class="form-label">Password</label>
-                      <div class="input-group has-validation">
-                        <span class="input-group-text" id="inputGroupPrepend"><i class="fa fa-lock"></i></span>
-                        <input type="password" name="password" class="form-control" id="password" required>
-                        <div class="invalid-feedback">Please enter your Password!</div>
-                      </div>
-                    </div>
-                    <div class="col-12">
-                      <button type="submit" class="btn btn-view text-white w-100" type="submit">Login <i class="fa fa-sign-in text-white"></i></button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-              <div class="copyright text-center text-dark">
-                <p class="copywrite-text">
-                  Copyright © <script>document.write(new Date().getFullYear());</script> All rights reserved to <br>Cylinder Master</a>
-                </p>
+      </div>
+
+      <div class="login-card-panel">
+        <div class="login-card">
+          <div class="login-card-header">
+            <span class="login-kicker">Cylinder Master</span>
+            <h1>Sign in</h1>
+          </div>
+
+          <form action="{% url 'Login-Auth' %}" method="post" class="row g-3 needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="col-12">
+              <label for="username" class="form-label">Username</label>
+              <div class="input-group has-validation login-input-group">
+                <span class="input-group-text"><i class="fa fa-user"></i></span>
+                <input type="text" name="username" class="form-control" id="username" autocomplete="username" required>
+                <div class="invalid-feedback">Please enter your username.</div>
               </div>
             </div>
-          </div>
+            <div class="col-12">
+              <label for="password" class="form-label">Password</label>
+              <div class="input-group has-validation login-input-group">
+                <span class="input-group-text"><i class="fa fa-lock"></i></span>
+                <input type="password" name="password" class="form-control" id="password" autocomplete="current-password" required>
+                <div class="invalid-feedback">Please enter your password.</div>
+              </div>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn login-submit w-100">Login <i class="fa fa-sign-in"></i></button>
+            </div>
+          </form>
         </div>
-      </section>
-    </div>
-  </main><!-- End #main -->
+
+        <p class="login-copyright">
+          Copyright © <script>document.write(new Date().getFullYear());</script> Cylinder Master
+        </p>
+      </div>
+    </section>
+  </main>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
   <!-- Vendor JS Files -->
