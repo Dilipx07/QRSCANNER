@@ -40,6 +40,18 @@ python manage.py test
 
 For this project, tests should verify both workflow behavior and required master data such as cylinder type seeds.
 
+## Security Flow
+
+Run these checks before pushing authentication, dependency, or deployment changes:
+
+```bash
+python manage.py check --deploy
+python -m pip_audit -r requirements.txt
+python -m bandit -r Login QR QRSCANNER -x QRSCANNER/static,QR/migrations,Login/migrations -ll
+```
+
+Fix any reported high, medium, or dependency vulnerability before release.
+
 ## Release Flow
 
 Before pushing:

@@ -4,7 +4,8 @@ QRSCANNER is the Gas Cylinder Scanner, a Django application for managing gas cyl
 
 ## Features
 
-- Login and logout flow backed by the `Login` app.
+- Login and logout flow backed by the `Login` app with Django password hashing.
+- Protected QR routes with automatic logout after session expiry.
 - Cylinder stock dashboard at `/QR/Dashboard`.
 - Cylinder vendor and gas type lookup endpoints.
 - Cylinder inward form, QR validation, submission, and removal.
@@ -16,7 +17,7 @@ QRSCANNER is the Gas Cylinder Scanner, a Django application for managing gas cyl
 ## Tech Stack
 
 - Python 3.11
-- Django 5.0.6
+- Django 5.2.15
 - PostgreSQL
 - Pipenv or `pip` with `requirements.txt`
 - Bootstrap and vendored static assets
@@ -77,6 +78,10 @@ DB_USER=postgres
 DB_USER_PASSWORD=change-me
 DB_HOST=127.0.0.1
 DB_PORT=5432
+SECRET_KEY=change-me-to-a-long-random-secret
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+SESSION_COOKIE_AGE=86400
 ```
 
 Apply database migrations:
@@ -94,6 +99,12 @@ python manage.py runserver
 ```
 
 Open `http://127.0.0.1:8000/Login`.
+
+## Authentication
+
+The application uses the existing `Login.qr_scanner_login` table for scanner users, but passwords are stored with Django's password hashers instead of plaintext. Existing plaintext passwords are converted to hashes by the `Login.0003_hash_existing_login_passwords` migration.
+
+QR workflow routes under `/QR/` require a valid login session. Sessions are refreshed on activity and automatically redirected to `/Login` after `SESSION_COOKIE_AGE` seconds of inactivity.
 
 ## Routes
 
@@ -114,6 +125,7 @@ Do not commit `.env`, `db.sqlite3`, virtual environments, logs, or Python cache 
 
 - Move `SECRET_KEY`, `DEBUG`, and `ALLOWED_HOSTS` to environment variables before production deployment.
 - Set `DEBUG=False` in production.
+- Set `SESSION_COOKIE_SECURE=True`, `CSRF_COOKIE_SECURE=True`, and `SECURE_SSL_REDIRECT=True` when serving over HTTPS.
 - Configure production static file serving.
 - Use a production PostgreSQL database.
 - Review session settings and cookie security options.
@@ -125,6 +137,14 @@ Run the Django test suite from the project directory:
 
 ```bash
 python manage.py test
+```
+
+Run security checks:
+
+```bash
+python manage.py check --deploy
+python -m pip_audit -r requirements.txt
+python -m bandit -r Login QR QRSCANNER -x QRSCANNER/static,QR/migrations,Login/migrations -ll
 ```
 
 ## Workflow

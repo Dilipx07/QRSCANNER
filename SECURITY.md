@@ -15,6 +15,23 @@ Include:
 - Affected routes, files, or configuration.
 - Suggested mitigation, if known.
 
+## Authentication And Sessions
+
+- Scanner passwords are stored using Django password hashers.
+- Existing plaintext scanner passwords are hashed through a migration.
+- QR workflow routes require a valid login session.
+- Expired sessions are logged out and redirected to `/Login`.
+
+## Security Checks
+
+Before release, run:
+
+```bash
+python manage.py check --deploy
+python -m pip_audit -r requirements.txt
+python -m bandit -r Login QR QRSCANNER -x QRSCANNER/static,QR/migrations,Login/migrations -ll
+```
+
 ## Sensitive Data
 
 Never commit:
@@ -22,8 +39,7 @@ Never commit:
 - `.env` files.
 - Database dumps or local database files.
 - Production credentials.
-- Secret keys.
+- Secret keys or production environment values.
 - User data or operational cylinder records.
 
-The current Django settings contain development defaults. Before production deployment, move `SECRET_KEY`, `DEBUG`, and host configuration into environment variables.
-
+Production deployments must set `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS`, secure cookie flags, and HTTPS redirect/HSTS settings through environment variables.

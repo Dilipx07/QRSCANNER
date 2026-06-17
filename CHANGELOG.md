@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Replaced plaintext login checks with Django password hashing and session key rotation.
+- Added middleware to protect QR routes and auto logout expired sessions.
+- Updated security settings, authentication tests, and dependency pins after vulnerability scans.
 - Updated the UI theme to match the Cylinder Master teal, graphite, and green login background palette.
 - Rebuilt the login page with a Next.js-inspired auth card and stronger logo contrast.
 - Updated Cylinder Master logo assets to use the full logo with a softened transparent white background.

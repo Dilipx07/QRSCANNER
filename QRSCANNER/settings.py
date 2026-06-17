@@ -12,22 +12,38 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import secrets
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv()
+
+
+def env_bool(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def env_list(name, default):
+    value = os.getenv(name)
+    if not value:
+        return default
+    return [item.strip() for item in value.split(',') if item.strip()]
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x(b=!c1286qskz*p_e2mf2ug*g5xr(0f7=$!%jznfq)%3^z$t&'
+DEBUG = env_bool('DEBUG', True)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    SECRET_KEY = secrets.token_urlsafe(64)
 
-ALLOWED_HOSTS = ['127.0.0.1','ue.geotechgeospatial.in']
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost', 'testserver'])
 
 
 # Application definition
@@ -50,6 +66,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'Login.middleware.SessionExpiryMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -77,7 +94,6 @@ WSGI_APPLICATION = 'QRSCANNER.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-load_dotenv()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -150,10 +166,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Below Two lines is used to set session time and whether to expire a session when user closes the browser
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-SESSION_COOKIE_AGE = 86400 # 24 Hours
-IDLE_TIME = 86400
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '86400')) # 24 Hours
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', not DEBUG)
+CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', not DEBUG)
+SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', not DEBUG)
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '0' if DEBUG else '31536000'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', not DEBUG)
+SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', not DEBUG)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
+
+IDLE_TIME = SESSION_COOKIE_AGE
 from datetime import timedelta
-SESSION_EXPIRE_SECONDS = timedelta(seconds=86400)
+SESSION_EXPIRE_SECONDS = timedelta(seconds=SESSION_COOKIE_AGE)
 # django-session-timeout After Sesion Timeout.
 # https://pypi.org/project/django-session-timeout/
 # SESSION_EXPIRE_SECONDS = 10  # 1 hour
