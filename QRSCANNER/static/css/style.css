@@ -2871,6 +2871,13 @@ a:hover {
 .sidebar {
   width: 284px;
   padding: 14px 12px 12px;
+  overflow-x: visible;
+  overflow-y: auto;
+}
+
+.sidebar,
+.sidebar * {
+  box-sizing: border-box;
 }
 
 .sidebar::after {
@@ -2882,8 +2889,9 @@ a:hover {
 .sidebar-profile {
   min-height: 62px;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   padding: 9px 10px;
+  border-radius: 7px;
 }
 
 .sidebar-profile img {
@@ -2901,17 +2909,30 @@ a:hover {
 }
 
 .sidebar-nav {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
   gap: 6px;
+  align-content: start;
+  grid-auto-rows: max-content;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding-right: 0;
 }
 
 .sidebar-nav .nav-link,
 .sidebar-nav .nav-link.collapsed,
 .sidebar-footer .nav-link {
-  min-height: 42px;
+  min-height: 40px;
+  width: 100%;
+  display: flex;
+  align-items: center;
   gap: 10px;
-  padding: 9px 11px;
+  padding: 8px 10px;
+  border-radius: 7px;
   font-size: 13px;
   line-height: 1.2;
+  white-space: normal;
 }
 
 .sidebar-nav .nav-link i,
@@ -2923,13 +2944,15 @@ a:hover {
 
 .sidebar-footer {
   padding-top: 10px;
+  margin-top: auto;
+  flex: 0 0 auto;
 }
 
 .sidebar-close-handle {
   top: 82px;
-  right: -20px;
-  width: 38px;
-  height: 54px;
+  right: -18px;
+  width: 36px;
+  height: 50px;
 }
 
 .sidebar-close-handle i {

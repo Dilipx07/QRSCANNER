@@ -39,6 +39,14 @@
     el.addEventListener('scroll', listener)
   }
 
+  if (window.jQuery) {
+    window.jQuery.ajaxSetup({
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+  }
+
   /**
    * App shell interactions
    */
@@ -61,7 +69,7 @@
     const isOpen = isSidebarOpen()
     body.classList.toggle('sidebar-open', isOpen)
     body.classList.toggle('sidebar-closed', !isOpen)
-    body.classList.toggle('sidebar-scroll-locked', isOpen)
+    body.classList.toggle('sidebar-scroll-locked', isOpen && mobileSidebarQuery.matches)
     sidebarToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
     const icon = sidebarToggle.querySelector('i')
     if (icon) {
