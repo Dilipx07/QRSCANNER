@@ -40,22 +40,141 @@
   }
 
   /**
-   * Sidebar toggle
+   * App shell interactions
    */
-  if (select('.toggle-sidebar-btn')) {
-    on('click', '.toggle-sidebar-btn', function(e) {
-      select('body').classList.toggle('toggle-sidebar')
+  const body = select('body')
+  const sidebarToggle = select('.toggle-sidebar-btn')
+  const sidebarBackdrop = select('.sidebar-backdrop')
+  const searchBar = select('.search-bar')
+  const appLoader = select('#app-loader')
+  const mobileSidebarQuery = window.matchMedia('(max-width: 1199px)')
+
+  const isSidebarOpen = () => {
+    if (!body) return false
+    return mobileSidebarQuery.matches
+      ? body.classList.contains('toggle-sidebar')
+      : !body.classList.contains('toggle-sidebar')
+  }
+
+  const syncSidebarToggleIcon = () => {
+    if (!sidebarToggle) return
+    const isOpen = isSidebarOpen()
+    sidebarToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+    const icon = sidebarToggle.querySelector('i')
+    if (icon) {
+      icon.className = isOpen ? 'bi bi-chevron-left' : 'bi bi-chevron-right'
+    }
+  }
+
+  const setSidebarState = (isOpen) => {
+    if (!body) return
+    body.classList.toggle('toggle-sidebar', mobileSidebarQuery.matches ? isOpen : !isOpen)
+    body.classList.toggle('sidebar-open', isOpen)
+    syncSidebarToggleIcon()
+  }
+
+  const closeSidebar = () => setSidebarState(false)
+
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function(e) {
+      e.preventDefault()
+      setSidebarState(!isSidebarOpen())
     })
   }
+
+  syncSidebarToggleIcon()
+  mobileSidebarQuery.addEventListener('change', () => {
+    body.classList.remove('sidebar-open')
+    syncSidebarToggleIcon()
+  })
+
+  select('[data-sidebar-close]', true).forEach(closeControl => {
+    closeControl.addEventListener('click', closeSidebar)
+  })
+
+  select('#sidebar .nav-link', true).forEach(navLink => {
+    navLink.addEventListener('click', () => {
+      if (window.matchMedia('(max-width: 1199px)').matches) {
+        closeSidebar()
+      }
+    })
+  })
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', closeSidebar)
+  }
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      closeSidebar()
+      if (searchBar) searchBar.classList.remove('search-bar-show')
+    }
+  })
 
   /**
    * Search bar toggle
    */
   if (select('.search-bar-toggle')) {
     on('click', '.search-bar-toggle', function(e) {
-      select('.search-bar').classList.toggle('search-bar-show')
+      e.preventDefault()
+      searchBar.classList.toggle('search-bar-show')
+      const searchInput = searchBar.querySelector('input')
+      if (searchBar.classList.contains('search-bar-show') && searchInput) {
+        setTimeout(() => searchInput.focus(), 80)
+      }
     })
   }
+
+  if (searchBar) {
+    searchBar.addEventListener('click', event => event.stopPropagation())
+    document.addEventListener('click', event => {
+      if (
+        searchBar.classList.contains('search-bar-show') &&
+        !event.target.closest('.search-bar') &&
+        !event.target.closest('.search-bar-toggle')
+      ) {
+        searchBar.classList.remove('search-bar-show')
+      }
+    })
+  }
+
+  /**
+   * Page flash loader
+   */
+  const hideAppLoader = () => {
+    if (!body || !appLoader) return
+    body.classList.remove('app-loading')
+    appLoader.classList.add('app-loader-hidden')
+  }
+
+  const showAppLoader = () => {
+    if (!body || !appLoader) return
+    body.classList.add('app-loading')
+    appLoader.classList.remove('app-loader-hidden')
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(hideAppLoader, 260)
+  })
+
+  select('a[href]', true).forEach(link => {
+    link.addEventListener('click', event => {
+      const href = link.getAttribute('href') || ''
+      const target = link.getAttribute('target')
+      if (!href || href.startsWith('#') || href.startsWith('javascript:') || target === '_blank' || event.defaultPrevented) {
+        return
+      }
+      showAppLoader()
+    })
+  })
+
+  select('form', true).forEach(form => {
+    form.addEventListener('submit', () => {
+      if (form.checkValidity()) {
+        showAppLoader()
+      }
+    })
+  })
 
   /**
    * Navbar links active state on scroll

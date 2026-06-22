@@ -1,5 +1,15 @@
 {% load static %}
 <aside id="sidebar" class="sidebar">
+  <button class="sidebar-close-handle" type="button" data-sidebar-close aria-label="Close navigation">
+    <i class="bi bi-chevron-left"></i>
+  </button>
+  <div class="sidebar-profile">
+    <img src="{% static 'img/profile.svg' %}" alt="User profile">
+    <div>
+      <strong>{{ request.session.User_Name|default:"User" }}</strong>
+      <span>Scanner Operator</span>
+    </div>
+  </div>
   <ul class="sidebar-nav" id="sidebar-nav">
     <li class="nav-item">
       <a class="nav-link {% if not dashboard_content %}collapsed{% endif %}" href="{% url 'Cylinder-Stock-Dashboard' %}" >
@@ -25,6 +35,8 @@
         <span>Inward / Outward Report</span>
       </a>
     </li>
-    <li class="nav-item"><a class="nav-link collapsed" href="{% url 'Logout' %}"><i class="bi bi-box-arrow-in-right"></i><span>Logout</span></a></li>
   </ul>
+  <div class="sidebar-footer">
+    <a class="nav-link collapsed" href="{% url 'Logout' %}"><i class="bi bi-box-arrow-right"></i><span>Logout</span></a>
+  </div>
 </aside>

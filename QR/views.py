@@ -276,6 +276,17 @@ def cylinder_stock_dashboard(request):
     }
     return HttpResponse(template.render(context,request))
 
+def cylinder_dashboard_analytics(request):
+    analytics = build_cylinder_analytics()
+    return JsonResponse(
+        {
+            'timestamp': current_ist_datetime(),
+            'analytics': analytics,
+        },
+        encoder=DjangoJSONEncoder,
+        status=200,
+    )
+
 def cylinder_inward_form(request):
     template = loader.get_template('QR/Cylinder-Inward/cylinder-inward-form.html')
     cylinder_inward_filter = {

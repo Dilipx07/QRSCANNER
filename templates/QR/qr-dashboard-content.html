@@ -11,7 +11,7 @@
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <div>
       <h4 class="page-heading mb-1">Cylinder Stock Command Center</h4>
-      <p class="text-muted mb-0">Live stock, timing, and movement insights as of {{ tdate }}</p>
+      <p class="text-muted mb-0">Live stock, timing, and movement insights as of <span data-dashboard-timestamp>{{ tdate }}</span></p>
     </div>
     <div class="d-flex gap-2">
       <a class="btn btn-submit text-white" href="{% url 'Cylinder-Inward-Form' %}"><i class="bi bi-box-arrow-down"></i> Inward</a>
@@ -24,37 +24,37 @@
     <div class="col-xl-2 col-md-4 col-6">
       <div class="metric-card">
         <span>Total Cylinders</span>
-        <strong>{{ analytics.summary.total_cylinders }}</strong>
+        <strong data-metric="total_cylinders">{{ analytics.summary.total_cylinders }}</strong>
       </div>
     </div>
     <div class="col-xl-2 col-md-4 col-6">
       <div class="metric-card metric-card-success">
         <span>Available Stock</span>
-        <strong>{{ analytics.summary.available_stock }}</strong>
+        <strong data-metric="available_stock">{{ analytics.summary.available_stock }}</strong>
       </div>
     </div>
     <div class="col-xl-2 col-md-4 col-6">
       <div class="metric-card metric-card-warning">
         <span>Pending Inward</span>
-        <strong>{{ analytics.summary.pending_inward }}</strong>
+        <strong data-metric="pending_inward">{{ analytics.summary.pending_inward }}</strong>
       </div>
     </div>
     <div class="col-xl-2 col-md-4 col-6">
       <div class="metric-card metric-card-danger">
         <span>Pending Outward</span>
-        <strong>{{ analytics.summary.pending_outward }}</strong>
+        <strong data-metric="pending_outward">{{ analytics.summary.pending_outward }}</strong>
       </div>
     </div>
     <div class="col-xl-2 col-md-4 col-6">
       <div class="metric-card">
         <span>Stocked Out</span>
-        <strong>{{ analytics.summary.stock_out }}</strong>
+        <strong data-metric="stock_out">{{ analytics.summary.stock_out }}</strong>
       </div>
     </div>
     <div class="col-xl-2 col-md-4 col-6">
       <div class="metric-card">
         <span>Stock Health</span>
-        <strong>{{ analytics.summary.stock_health }}%</strong>
+        <strong data-metric="stock_health">{{ analytics.summary.stock_health }}%</strong>
       </div>
     </div>
   </div>
@@ -94,15 +94,15 @@
           <div class="insight-stack">
             <div class="insight-item">
               <span>Avg stock-in time</span>
-              <strong>{{ analytics.summary.avg_stock_in_hours }} hrs</strong>
+              <strong data-metric="avg_stock_in_hours">{{ analytics.summary.avg_stock_in_hours }} hrs</strong>
             </div>
             <div class="insight-item">
               <span>Avg stock-out time</span>
-              <strong>{{ analytics.summary.avg_stock_out_hours }} hrs</strong>
+              <strong data-metric="avg_stock_out_hours">{{ analytics.summary.avg_stock_out_hours }} hrs</strong>
             </div>
             <div class="insight-item">
               <span>Open workflow load</span>
-              <strong>{{ analytics.summary.risk_count }}</strong>
+              <strong data-metric="risk_count">{{ analytics.summary.risk_count }}</strong>
             </div>
           </div>
         </div>
@@ -112,7 +112,7 @@
       <div class="card analytics-card">
         <div class="card-body">
           <h5 class="card-title m-0 p-0 mb-3">Operational Insights</h5>
-          <ul class="analytics-insights">
+          <ul class="analytics-insights" data-dashboard-insights>
             {% for insight in analytics.insights %}
               <li>{{ insight }}</li>
             {% endfor %}
@@ -126,35 +126,43 @@
 
 {% block User-Scripts %}
 <script>
-  const analytics = {{ analytics_json|safe }};
+  const analyticsFallback = {{ analytics_json|safe }};
   const chartColors = {
-    teal: '#087984',
-    green: '#4dae38',
-    graphite: '#20272d',
-    amber: '#d98222',
-    red: '#d94a3a',
-    softTeal: 'rgba(8, 121, 132, 0.14)',
-    softGreen: 'rgba(77, 174, 56, 0.16)'
+    blue: '#2563eb',
+    indigo: '#2437c6',
+    violet: '#6d28d9',
+    cyan: '#06b6d4',
+    amber: '#d97706',
+    red: '#dc3545',
+    graphite: '#111827',
+    softBlue: 'rgba(37, 99, 235, 0.14)',
+    softViolet: 'rgba(109, 40, 217, 0.14)'
   };
 
-  new Chart(document.getElementById('movementChart'), {
+  const metricFormatters = {
+    stock_health: value => `${value}%`,
+    avg_stock_in_hours: value => `${value} hrs`,
+    avg_stock_out_hours: value => `${value} hrs`
+  };
+
+  const movementChart = new Chart(document.getElementById('movementChart'), {
     type: 'line',
     data: {
-      labels: analytics.charts.movement.labels,
+      labels: analyticsFallback.charts.movement.labels,
       datasets: [
         {
           label: 'Inward',
-          data: analytics.charts.movement.inward,
-          borderColor: chartColors.teal,
-          backgroundColor: chartColors.softTeal,
+          data: analyticsFallback.charts.movement.inward,
+          borderColor: chartColors.blue,
+          backgroundColor: chartColors.softBlue,
           fill: true,
           tension: 0.35
         },
         {
           label: 'Outward',
-          data: analytics.charts.movement.outward,
-          borderColor: chartColors.green,
-          backgroundColor: chartColors.softGreen,
+          data: analyticsFallback.charts.movement.outward,
+          borderColor: chartColors.violet,
+          backgroundColor: chartColors.softViolet,
           fill: true,
           tension: 0.35
         }
@@ -167,26 +175,26 @@
     }
   });
 
-  new Chart(document.getElementById('stockTypeChart'), {
+  const stockTypeChart = new Chart(document.getElementById('stockTypeChart'), {
     type: 'doughnut',
     data: {
-      labels: analytics.charts.stock_by_type.labels,
+      labels: analyticsFallback.charts.stock_by_type.labels,
       datasets: [{
-        data: analytics.charts.stock_by_type.data,
-        backgroundColor: ['#087984', '#4dae38', '#20272d', '#d98222', '#75b7bd', '#8bcf7c']
+        data: analyticsFallback.charts.stock_by_type.data,
+        backgroundColor: [chartColors.blue, chartColors.indigo, chartColors.violet, chartColors.cyan, chartColors.amber, chartColors.graphite]
       }]
     },
     options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
   });
 
-  new Chart(document.getElementById('vendorChart'), {
+  const vendorChart = new Chart(document.getElementById('vendorChart'), {
     type: 'bar',
     data: {
-      labels: analytics.charts.vendor_mix.labels,
+      labels: analyticsFallback.charts.vendor_mix.labels,
       datasets: [{
         label: 'Cylinder count',
-        data: analytics.charts.vendor_mix.data,
-        backgroundColor: chartColors.teal,
+        data: analyticsFallback.charts.vendor_mix.data,
+        backgroundColor: chartColors.indigo,
         borderRadius: 6
       }]
     },
@@ -197,5 +205,56 @@
       scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
     }
   });
+
+  const updateDashboard = analytics => {
+    Object.entries(analytics.summary).forEach(([key, value]) => {
+      const metric = document.querySelector(`[data-metric="${key}"]`);
+      if (metric) {
+        metric.textContent = metricFormatters[key] ? metricFormatters[key](value) : value;
+      }
+    });
+
+    const insightList = document.querySelector('[data-dashboard-insights]');
+    if (insightList) {
+      insightList.replaceChildren(
+        ...analytics.insights.map(insight => {
+          const item = document.createElement('li');
+          item.textContent = insight;
+          return item;
+        })
+      );
+    }
+
+    movementChart.data.labels = analytics.charts.movement.labels;
+    movementChart.data.datasets[0].data = analytics.charts.movement.inward;
+    movementChart.data.datasets[1].data = analytics.charts.movement.outward;
+    movementChart.update();
+
+    stockTypeChart.data.labels = analytics.charts.stock_by_type.labels;
+    stockTypeChart.data.datasets[0].data = analytics.charts.stock_by_type.data;
+    stockTypeChart.update();
+
+    vendorChart.data.labels = analytics.charts.vendor_mix.labels;
+    vendorChart.data.datasets[0].data = analytics.charts.vendor_mix.data;
+    vendorChart.update();
+  };
+
+  fetch("{% url 'Cylinder-Dashboard-Analytics' %}", {
+    headers: { 'Accept': 'application/json' }
+  })
+    .then(response => {
+      if (!response.ok) throw new Error(`Analytics API failed with ${response.status}`);
+      return response.json();
+    })
+    .then(payload => {
+      if (payload.timestamp) {
+        const timestamp = document.querySelector('[data-dashboard-timestamp]');
+        if (timestamp) timestamp.textContent = payload.timestamp;
+      }
+      updateDashboard(payload.analytics);
+    })
+    .catch(error => {
+      console.warn('Dashboard analytics API fallback in use.', error);
+    });
 </script>
 {% endblock User-Scripts %}

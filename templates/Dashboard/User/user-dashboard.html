@@ -45,7 +45,14 @@
     {% block User-Head %}{% endblock User-Head %}
     
   </head>
-  <body>
+  <body class="app-loading">
+    <div id="app-loader" class="app-loader" aria-live="polite" aria-label="Loading page">
+      <div class="app-loader-card">
+        <span class="app-loader-mark"></span>
+        <span class="app-loader-text">Loading workspace</span>
+      </div>
+    </div>
+    <div class="sidebar-backdrop" data-sidebar-close></div>
     {% include 'Navbar/User/user-navbar.html' %}
     {% include 'Sidebar/User/user-sidebar.html' %}
     <main id="main" class="main">

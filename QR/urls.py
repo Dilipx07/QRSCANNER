@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('Dashboard',views.cylinder_stock_dashboard,name='Cylinder-Stock-Dashboard'),
+    path('Dashboard-Analytics', views.cylinder_dashboard_analytics, name='Cylinder-Dashboard-Analytics'),
 
     # Cylinder master
     path('Cylinder-List',views.cylinder_master,name='Cylinder-List'),
