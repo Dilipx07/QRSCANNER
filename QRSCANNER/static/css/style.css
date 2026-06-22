@@ -2868,11 +2868,17 @@ a:hover {
 }
 
 /* Compact sidebar and viewport-edge launcher */
+html,
+body {
+  overflow-x: hidden;
+}
+
 .sidebar {
   width: 284px;
   padding: 14px 12px 12px;
-  overflow-x: visible;
+  overflow-x: hidden;
   overflow-y: auto;
+  border-radius: 0;
 }
 
 .sidebar,
@@ -2881,9 +2887,7 @@ a:hover {
 }
 
 .sidebar::after {
-  right: -28px;
-  width: 44px;
-  border-radius: 0 28px 28px 0;
+  display: none;
 }
 
 .sidebar-profile {
@@ -2949,10 +2953,7 @@ a:hover {
 }
 
 .sidebar-close-handle {
-  top: 82px;
-  right: -18px;
-  width: 36px;
-  height: 50px;
+  display: none !important;
 }
 
 .sidebar-close-handle i {
@@ -2961,9 +2962,9 @@ a:hover {
 
 .sidebar-floating-toggle {
   position: fixed;
-  top: 84px;
+  top: 42vh;
   left: 0;
-  z-index: 994;
+  z-index: 1001;
   width: 38px;
   height: 52px;
   display: inline-grid;
@@ -2976,7 +2977,7 @@ a:hover {
   color: var(--app-indigo);
   box-shadow: var(--app-soft-shadow);
   transform: translateX(0);
-  transition: transform 220ms ease, opacity 180ms ease, background 180ms ease, color 180ms ease;
+  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1), background 180ms ease, color 180ms ease, border-radius 180ms ease;
 }
 
 .sidebar-floating-toggle:hover,
@@ -2991,9 +2992,10 @@ a:hover {
 }
 
 .sidebar-open .sidebar-floating-toggle {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-100%);
+  opacity: 1;
+  pointer-events: auto;
+  border-radius: 999px;
+  transform: translateX(266px);
 }
 
 body.sidebar-scroll-locked {
@@ -3040,7 +3042,12 @@ body.sidebar-scroll-locked .sidebar-floating-toggle {
   }
 
   .sidebar-floating-toggle {
-    top: 82px;
-    z-index: 996;
+    top: 42vh;
+    z-index: 1001;
+  }
+
+  .sidebar-open .sidebar-floating-toggle,
+  .toggle-sidebar .sidebar-floating-toggle {
+    transform: translateX(calc(min(284px, calc(100vw - 48px)) - 18px));
   }
 }
