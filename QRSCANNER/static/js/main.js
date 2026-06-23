@@ -222,7 +222,7 @@
 
     if (searchInput) {
       searchInput.value = ''
-      if (currentPageLabel) currentPageLabel.textContent = currentPage.label
+      if (currentPageLabel) currentPageLabel.textContent = `\u00b7 ${currentPage.label}`
       searchInput.addEventListener('focus', () => {
         renderSearchResults(searchInput.value)
       })
