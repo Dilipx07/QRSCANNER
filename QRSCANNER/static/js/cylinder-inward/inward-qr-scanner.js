@@ -65,6 +65,27 @@ $('.clear-cam-default').on('click',function(){
 
 var currDeviceID = localStorage.getItem('currDeviceID') || null ;
 // var currDeviceID = null ;
+const getPreferredCameraStream = async () => {
+  if (currDeviceID) {
+    try {
+      $('.cam-switch').hide();
+      return await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: currDeviceID } } });
+    } catch (error) {
+      console.warn('Stored camera default is unavailable. Falling back to browser camera selection.', error);
+      localStorage.removeItem('currDeviceID');
+      currDeviceID = null;
+      $('.cam-switch').slideDown();
+      $('.clear-cam-default').fadeOut();
+    }
+  }
+  try {
+    return await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+  } catch (error) {
+    console.warn('Environment camera unavailable. Falling back to any available camera.', error);
+    return navigator.mediaDevices.getUserMedia({ video: true });
+  }
+};
+
 const getCameraDevices = async () => {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -153,13 +174,7 @@ const scanQRCode = async () => {
     $('.re-scan').hide();
     formReset();
     checkCamDefaults();
-    var newstream;
-    if (currDeviceID){
-      $('.cam-switch').hide();
-      newstream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: currDeviceID } } });
-    }else{
-      newstream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    }
+    var newstream = await getPreferredCameraStream();
     const stream = newstream;
     const videoTracks = stream.getVideoTracks();
     if (videoTracks.length > 0) {
@@ -234,8 +249,15 @@ const scanQRCode = async () => {
     }, 300);
   } catch (error) {
     console.error('Error accessing camera:', error);
-    // window.alert('Error accessing camera:', error);
-    const errorText = $('<p>').addClass('alert alert-danger text-center').text('Allow camera permissions in your browser settings.');
+    $('#preloader').fadeOut();
+    $('body').removeAttr('style');
+    $('.sub-btn').hide();
+    $('.qr-found-details').hide();
+    $('#qr-alert').hide();
+    const message = error && error.name === 'NotAllowedError'
+      ? 'Allow camera permissions in your browser settings.'
+      : 'Camera is unavailable. Clear defaults and try again.';
+    const errorText = $('<p>').addClass('alert alert-danger text-center').text(message);
     $('#qr-video').fadeOut();
     $('#qr-video').parent().parent().find('p').remove();
     $('#qr-video').parent().parent().append(errorText);
