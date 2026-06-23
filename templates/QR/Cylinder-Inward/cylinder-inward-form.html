@@ -94,10 +94,10 @@
               </div>
               <div class="col-6">
                 <label for="cylinder_gas_vendor" class="form-label">Vendor Name :</label>
-                <select name="cylinder_gas_vendor" id="cylinder_gas_vendor" class="form-select form-select-sm" {% if inward_table %}disabled{% endif %} required>
+                <select name="cylinder_gas_vendor" id="cylinder_gas_vendor" class="form-select form-select-sm" data-inward-vendor-select data-selected-vendor="{{ vendor_id|default:'' }}" {% if inward_table %}disabled{% endif %} required>
                   <option value disabled selected>Select Vendor</option>
                   {% for gcv in gas_cylinder_vendors %}
-                    <option value="{{gcv.gas_cylinder_vendor_id}}"{% if vendor_id == gcv.gas_cylinder_vendor_id %}selected{% endif %}>{{gcv.gas_cylinder_vendor_name}}</option>
+                    <option value="{{gcv.gas_cylinder_vendor_id}}"{% if vendor_id == gcv.gas_cylinder_vendor_id %}selected{% endif %}>{{gcv.vendor_detail_label}}</option>
                   {% endfor %}
                 </select>
                 <code class="invalid-feedback">
@@ -311,6 +311,35 @@
 {% endif %}
 <script>
 $(document).ready(function(){
+  const vendorSelect = document.querySelector('[data-inward-vendor-select]');
+  if (vendorSelect && !vendorSelect.disabled) {
+    const selectedVendor = vendorSelect.dataset.selectedVendor || '';
+    fetch("{% url 'Vendor-Data' %}?active=1", {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin'
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('Unable to load vendors');
+        return response.json();
+      })
+      .then((payload) => {
+        vendorSelect.innerHTML = '<option value disabled selected>Select Vendor</option>';
+        (payload.vendors || []).forEach((vendor) => {
+          const option = document.createElement('option');
+          option.value = vendor.gas_cylinder_vendor_id;
+          option.textContent = vendor.vendor_detail_label || vendor.gas_cylinder_vendor_name;
+          option.selected = selectedVendor === String(vendor.gas_cylinder_vendor_id);
+          vendorSelect.appendChild(option);
+        });
+      })
+      .catch(() => {
+        if (window.toastr) toastr.error('Unable to load vendor dropdown.', 'Data Error');
+      });
+  }
+
   $('#po_date').on('change', function() {
     var userDate = new Date($(this).val());
     var today = new Date();

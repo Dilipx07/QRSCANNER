@@ -10,6 +10,10 @@ urlpatterns = [
 
     # Cylinder Vendor Master
     path('Cylinder-Vendors',views.cylinder_vendor_master,name='Cylinder-Vendors'),
+    path('Vendors',views.vendor_management,name='Vendor-Management'),
+    path('Vendor-Data',views.vendor_data,name='Vendor-Data'),
+    path('Vendor-Save',views.vendor_save,name='Vendor-Save'),
+    path('Vendor-Delete',views.vendor_delete,name='Vendor-Delete'),
 
     # Cylinder Stocking In / Inwarding
     path('Cylinder-Stocking-In',views.cylinder_stock_in,name='Cylinder-Stocking-In'),

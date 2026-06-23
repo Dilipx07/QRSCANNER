@@ -21,8 +21,20 @@ class CylinderTypeMasterAdmin(admin.ModelAdmin):
 
 @admin.register(Gas_Cylinder_Vendors_Master)
 class GasCylinderVendorsMasterAdmin(admin.ModelAdmin):
-    list_display = ("gas_cylinder_vendor_id", "gas_cylinder_vendor_name")
-    search_fields = ("gas_cylinder_vendor_name",)
+    list_display = (
+        "gas_cylinder_vendor_id",
+        "gas_cylinder_vendor_name",
+        "gas_cylinder_vendor_contact_person",
+        "gas_cylinder_vendor_phone",
+        "gas_cylinder_vendor_active",
+    )
+    list_filter = ("gas_cylinder_vendor_active",)
+    search_fields = (
+        "gas_cylinder_vendor_name",
+        "gas_cylinder_vendor_contact_person",
+        "gas_cylinder_vendor_phone",
+        "gas_cylinder_vendor_email",
+    )
 
 
 @admin.register(Cylinder_Inward_Details)

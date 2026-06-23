@@ -199,7 +199,7 @@
     vendors.forEach((vendor) => {
       const option = document.createElement('option');
       option.value = vendor.gas_cylinder_vendor_id;
-      option.textContent = vendor.gas_cylinder_vendor_name;
+      option.textContent = vendor.vendor_detail_label || vendor.gas_cylinder_vendor_name;
       option.selected = selectedVendor === String(vendor.gas_cylinder_vendor_id);
       vendorSelect.appendChild(option);
     });

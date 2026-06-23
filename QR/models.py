@@ -28,6 +28,11 @@ class Cylinder_Type_Master(models.Model):
 class Gas_Cylinder_Vendors_Master(models.Model):
     gas_cylinder_vendor_id = models.BigAutoField(primary_key=True,unique=True)
     gas_cylinder_vendor_name = models.CharField(unique=True,null=False)
+    gas_cylinder_vendor_contact_person = models.CharField(max_length=120, blank=True, default="")
+    gas_cylinder_vendor_phone = models.CharField(max_length=40, blank=True, default="")
+    gas_cylinder_vendor_email = models.EmailField(blank=True, default="")
+    gas_cylinder_vendor_address = models.TextField(blank=True, default="")
+    gas_cylinder_vendor_active = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "Gas Cylinder Vendor"
@@ -36,6 +41,16 @@ class Gas_Cylinder_Vendors_Master(models.Model):
 
     def __str__(self):
         return self.gas_cylinder_vendor_name
+
+    @property
+    def vendor_detail_label(self):
+        details = [
+            self.gas_cylinder_vendor_contact_person,
+            self.gas_cylinder_vendor_phone,
+            self.gas_cylinder_vendor_email,
+        ]
+        detail_text = " | ".join(item for item in details if item)
+        return f"{self.gas_cylinder_vendor_name} - {detail_text}" if detail_text else self.gas_cylinder_vendor_name
 
 class Cylinder_Inward_Details(models.Model):
     cylinder_inward_id = models.BigAutoField(primary_key=True,unique=True)

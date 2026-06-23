@@ -1,0 +1,263 @@
+{% extends 'Dashboard/User/user-dashboard.html' %}
+
+{% load static %}
+
+{% block User-Body %}
+<div id="preloader"></div>
+<section class="section analytics-page">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h4 class="page-heading mb-1">Vendor Master</h4>
+      <p class="text-muted mb-0">Maintain the approved vendor list used across inward, outward, and reporting workflows.</p>
+    </div>
+    <a href="{% url 'Cylinder-Stock-Dashboard' %}" class="btn btn-back text-white">
+      <span class="fa fa-arrow-circle-left"></span>&nbsp; Dashboard
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-xl-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title m-0 p-0 mb-3">Vendor Details</h5>
+          <form id="vendor-form" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <input type="hidden" id="vendor_id" name="vendor_id">
+            <div class="mb-2">
+              <label for="vendor_name" class="form-label">Vendor Name</label>
+              <input type="text" class="form-control" id="vendor_name" name="vendor_name" maxlength="255" required>
+              <code class="invalid-feedback">Vendor name is required.</code>
+            </div>
+            <div class="mb-2">
+              <label for="contact_person" class="form-label">Contact Person</label>
+              <input type="text" class="form-control" id="contact_person" name="contact_person" maxlength="120">
+            </div>
+            <div class="mb-2">
+              <label for="phone" class="form-label">Phone</label>
+              <input type="text" class="form-control" id="phone" name="phone" maxlength="40">
+            </div>
+            <div class="mb-2">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email">
+            </div>
+            <div class="mb-3">
+              <label for="address" class="form-label">Address</label>
+              <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+            </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" role="switch" id="active" name="active" checked>
+              <label class="form-check-label" for="active">Active vendor</label>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-submit text-white flex-fill">
+                <i class="bi bi-save"></i> Save
+              </button>
+              <button type="button" class="btn btn-outline-secondary flex-fill" id="vendor-reset">
+                Reset
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+            <h5 class="card-title m-0 p-0">Vendor Directory</h5>
+            <button type="button" class="btn btn-view text-white btn-sm" id="vendor-refresh">
+              <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Vendor</th>
+                  <th>Contact</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th class="text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody data-vendor-table>
+                <tr><td colspan="7" class="text-center text-muted py-4">Loading vendors...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock User-Body %}
+
+{% block User-Scripts %}
+<script>
+  (function () {
+    const form = document.getElementById('vendor-form');
+    const tableBody = document.querySelector('[data-vendor-table]');
+    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+
+    let vendors = [];
+
+    const setLoading = (enabled) => {
+      const loader = document.getElementById('preloader');
+      if (!loader) return;
+      loader.style.display = enabled ? 'block' : 'none';
+    };
+
+    const resetForm = () => {
+      form.reset();
+      form.classList.remove('was-validated');
+      document.getElementById('vendor_id').value = '';
+      document.getElementById('active').checked = true;
+    };
+
+    const renderTable = () => {
+      if (!vendors.length) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No vendors found. Add the first vendor from the form.</td></tr>';
+        return;
+      }
+      tableBody.innerHTML = vendors.map((vendor, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>
+            <strong>${escapeHtml(vendor.gas_cylinder_vendor_name)}</strong>
+            <div class="text-muted small">${escapeHtml(vendor.gas_cylinder_vendor_address || 'No address')}</div>
+          </td>
+          <td>${escapeHtml(vendor.gas_cylinder_vendor_contact_person || 'NA')}</td>
+          <td>${escapeHtml(vendor.gas_cylinder_vendor_phone || 'NA')}</td>
+          <td>${escapeHtml(vendor.gas_cylinder_vendor_email || 'NA')}</td>
+          <td>
+            <span class="badge ${vendor.gas_cylinder_vendor_active ? 'bg-success' : 'bg-secondary'}">
+              ${vendor.gas_cylinder_vendor_active ? 'Active' : 'Inactive'}
+            </span>
+          </td>
+          <td class="text-end">
+            <button type="button" class="btn btn-sm btn-view text-white" data-vendor-edit="${vendor.gas_cylinder_vendor_id}">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-danger text-white" data-vendor-delete="${vendor.gas_cylinder_vendor_id}" ${vendor.gas_cylinder_vendor_active ? '' : 'disabled'}>
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    };
+
+    const loadVendors = () => {
+      setLoading(true);
+      fetch("{% url 'Vendor-Data' %}", {
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error('Unable to load vendors');
+          return response.json();
+        })
+        .then((payload) => {
+          vendors = payload.vendors || [];
+          renderTable();
+        })
+        .catch(() => {
+          if (window.toastr) toastr.error('Unable to load vendors.', 'Data Error');
+        })
+        .finally(() => setLoading(false));
+    };
+
+    const fillForm = (vendor) => {
+      document.getElementById('vendor_id').value = vendor.gas_cylinder_vendor_id;
+      document.getElementById('vendor_name').value = vendor.gas_cylinder_vendor_name || '';
+      document.getElementById('contact_person').value = vendor.gas_cylinder_vendor_contact_person || '';
+      document.getElementById('phone').value = vendor.gas_cylinder_vendor_phone || '';
+      document.getElementById('email').value = vendor.gas_cylinder_vendor_email || '';
+      document.getElementById('address').value = vendor.gas_cylinder_vendor_address || '';
+      document.getElementById('active').checked = Boolean(vendor.gas_cylinder_vendor_active);
+      document.getElementById('vendor_name').focus();
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+      }
+      const payload = new FormData(form);
+      payload.set('active', document.getElementById('active').checked ? '1' : '0');
+      setLoading(true);
+      fetch("{% url 'Vendor-Save' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: payload,
+        credentials: 'same-origin'
+      })
+        .then((response) => response.json().then((body) => ({ response, body })))
+        .then(({ response, body }) => {
+          if (!response.ok) throw new Error(body.message || 'Unable to save vendor');
+          if (window.toastr) toastr.success('Vendor saved.', 'Success');
+          resetForm();
+          loadVendors();
+        })
+        .catch((error) => {
+          if (window.toastr) toastr.error(error.message, 'Save Failed');
+        })
+        .finally(() => setLoading(false));
+    });
+
+    tableBody.addEventListener('click', (event) => {
+      const editButton = event.target.closest('[data-vendor-edit]');
+      const deleteButton = event.target.closest('[data-vendor-delete]');
+      if (editButton) {
+        const vendor = vendors.find((item) => String(item.gas_cylinder_vendor_id) === editButton.dataset.vendorEdit);
+        if (vendor) fillForm(vendor);
+      }
+      if (deleteButton) {
+        const payload = new FormData();
+        payload.set('vendor_id', deleteButton.dataset.vendorDelete);
+        setLoading(true);
+        fetch("{% url 'Vendor-Delete' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: payload,
+          credentials: 'same-origin'
+        })
+          .then((response) => response.json().then((body) => ({ response, body })))
+          .then(({ response, body }) => {
+            if (!response.ok) throw new Error(body.message || 'Unable to deactivate vendor');
+            if (window.toastr) toastr.success('Vendor deactivated.', 'Success');
+            loadVendors();
+          })
+          .catch((error) => {
+            if (window.toastr) toastr.error(error.message, 'Delete Failed');
+          })
+          .finally(() => setLoading(false));
+      }
+    });
+
+    document.getElementById('vendor-reset').addEventListener('click', resetForm);
+    document.getElementById('vendor-refresh').addEventListener('click', loadVendors);
+    loadVendors();
+  })();
+</script>
+{% endblock User-Scripts %}

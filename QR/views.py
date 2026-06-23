@@ -220,10 +220,11 @@ def _display_date(value, fmt='%d/%m/%Y | %I:%M %p'):
     return value.strftime(fmt)
 
 def _vendor_options():
-    return list(
-        Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_name')
-        .values('gas_cylinder_vendor_id', 'gas_cylinder_vendor_name')
-    )
+    return [
+        _serialize_vendor(vendor)
+        for vendor in Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_active=True)
+        .order_by('gas_cylinder_vendor_name')
+    ]
 
 def _resolve_gas_vendor(vendor_value):
     if not vendor_value:
@@ -234,6 +235,18 @@ def _resolve_gas_vendor(vendor_value):
     if vendor_value.isdigit():
         return Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_id=int(vendor_value)).first()
     return Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_name__iexact=vendor_value).first()
+
+def _serialize_vendor(vendor):
+    return {
+        'gas_cylinder_vendor_id': vendor.gas_cylinder_vendor_id,
+        'gas_cylinder_vendor_name': vendor.gas_cylinder_vendor_name,
+        'gas_cylinder_vendor_contact_person': vendor.gas_cylinder_vendor_contact_person,
+        'gas_cylinder_vendor_phone': vendor.gas_cylinder_vendor_phone,
+        'gas_cylinder_vendor_email': vendor.gas_cylinder_vendor_email,
+        'gas_cylinder_vendor_address': vendor.gas_cylinder_vendor_address,
+        'gas_cylinder_vendor_active': vendor.gas_cylinder_vendor_active,
+        'vendor_detail_label': vendor.vendor_detail_label,
+    }
 
 def _serialize_cylinder_record(record):
     return {
@@ -276,9 +289,11 @@ def cylinder_vendor_master(request):
     if auth_response:
         return auth_response
     if request.method == 'POST':
-        vendor_id = int(request.POST.get('vendor_id'))
+        vendor_id = request.POST.get('vendor_id')
         vendor_name = request.POST.get('vendor_name')
-        vendor_details = Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_id=vendor_id, gas_cylinder_vendor_name=vendor_name).first()
+        vendor_details = _resolve_gas_vendor(vendor_id) or _resolve_gas_vendor(vendor_name)
+        if not vendor_details:
+            return JsonResponse({'success': False, 'message': 'Vendor not found.'}, status=404)
         cylinder_filter = {
             "cylinder_vendor_name":vendor_details,
             "cylinder_Inward": True,
@@ -364,7 +379,7 @@ def cylinder_master_inward_qr_check(request):
         
 def cylinder_stock_dashboard(request):
     template = loader.get_template('QR/qr-dashboard-content.html')
-    gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_id')
+    gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_active=True).order_by('gas_cylinder_vendor_name')
     gas_cylinder_type = Cylinder_Type_Master.objects.order_by('cylinder_gas_type')
     analytics = build_cylinder_analytics()
     context = {
@@ -391,6 +406,71 @@ def cylinder_dashboard_analytics(request):
         status=200,
     )
 
+def vendor_management(request):
+    template = loader.get_template('QR/Vendors/vendor-management.html')
+    context = {
+        'vendor_management': True,
+    }
+    return HttpResponse(template.render(context,request))
+
+def vendor_data(request):
+    auth_response = _json_auth_required(request)
+    if auth_response:
+        return auth_response
+    active_only = request.GET.get('active') == '1'
+    vendors = Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_name')
+    if active_only:
+        vendors = vendors.filter(gas_cylinder_vendor_active=True)
+    return JsonResponse(
+        {'vendors': [_serialize_vendor(vendor) for vendor in vendors]},
+        encoder=DjangoJSONEncoder,
+        status=200,
+    )
+
+def vendor_save(request):
+    auth_response = _json_auth_required(request)
+    if auth_response:
+        return auth_response
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'POST required.'}, status=405)
+    vendor_id = request.POST.get('vendor_id')
+    vendor_name = (request.POST.get('vendor_name') or '').strip()
+    if not vendor_name:
+        return JsonResponse({'success': False, 'message': 'Vendor name is required.'}, status=400)
+    duplicate_query = Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_name__iexact=vendor_name)
+    if vendor_id:
+        duplicate_query = duplicate_query.exclude(gas_cylinder_vendor_id=vendor_id)
+    if duplicate_query.exists():
+        return JsonResponse({'success': False, 'message': 'Vendor name already exists.'}, status=409)
+    if vendor_id:
+        vendor = Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_id=vendor_id).first()
+        if not vendor:
+            return JsonResponse({'success': False, 'message': 'Vendor not found.'}, status=404)
+    else:
+        vendor = Gas_Cylinder_Vendors_Master()
+    vendor.gas_cylinder_vendor_name = vendor_name
+    vendor.gas_cylinder_vendor_contact_person = (request.POST.get('contact_person') or '').strip()
+    vendor.gas_cylinder_vendor_phone = (request.POST.get('phone') or '').strip()
+    vendor.gas_cylinder_vendor_email = (request.POST.get('email') or '').strip()
+    vendor.gas_cylinder_vendor_address = (request.POST.get('address') or '').strip()
+    vendor.gas_cylinder_vendor_active = request.POST.get('active', '1') in ('1', 'true', 'True', 'on')
+    vendor.save()
+    return JsonResponse({'success': True, 'vendor': _serialize_vendor(vendor)}, status=200)
+
+def vendor_delete(request):
+    auth_response = _json_auth_required(request)
+    if auth_response:
+        return auth_response
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'POST required.'}, status=405)
+    vendor_id = request.POST.get('vendor_id')
+    vendor = Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_id=vendor_id).first()
+    if not vendor:
+        return JsonResponse({'success': False, 'message': 'Vendor not found.'}, status=404)
+    vendor.gas_cylinder_vendor_active = False
+    vendor.save(update_fields=['gas_cylinder_vendor_active'])
+    return JsonResponse({'success': True, 'vendor': _serialize_vendor(vendor)}, status=200)
+
 def cylinder_inward_form(request):
     template = loader.get_template('QR/Cylinder-Inward/cylinder-inward-form.html')
     cylinder_inward_filter = {
@@ -401,7 +481,7 @@ def cylinder_inward_form(request):
     }
     cylinder_inward_stock = Cylinder_Store.objects.order_by('-cylinder_db_id').complex_filter(cylinder_inward_filter)
     gas_cylinder_type = Cylinder_Type_Master.objects.order_by('cylinder_type_id')
-    gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_id')
+    gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_active=True).order_by('gas_cylinder_vendor_name')
     context = {
         'cylinder_inward_form': True,
         'cylinder_inward_stock': cylinder_inward_stock,
@@ -428,7 +508,7 @@ def cylinder_inward_submit(request):
     }
     cylinder_inward_stock = Cylinder_Store.objects.order_by('-cylinder_db_id').complex_filter(cylinder_inward_filter)
     gas_cylinder_type = Cylinder_Type_Master.objects.order_by('cylinder_type_id')
-    gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_id')
+    gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_active=True).order_by('gas_cylinder_vendor_name')
     selected_vendor = _resolve_gas_vendor(vendor_id)
     context = {
         'cylinder_inward_form': True,
