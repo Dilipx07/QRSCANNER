@@ -2737,6 +2737,18 @@ a:hover {
   font-weight: 800;
 }
 
+.modal-backdrop {
+  z-index: 11050;
+}
+
+.modal {
+  z-index: 11060;
+}
+
+.modal.show {
+  pointer-events: auto;
+}
+
 @media (min-width: 1200px) {
   #main,
   #footer {

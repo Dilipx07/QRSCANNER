@@ -146,6 +146,8 @@
       }
     };
 
+    vendorModalElement.addEventListener('show.bs.modal', () => setLoading(false));
+
     const resetForm = () => {
       form.reset();
       form.classList.remove('was-validated');
